@@ -1,6 +1,6 @@
 # Jev 本地替代：Laya API
 
-想在本机运行 Jev 一类的结构化决策模型？本项目部署开源的 [Laya](https://pypi.org/project/laya/)，提供本地常驻的 System One HTTP API。它不是 [TypeSafe 的 Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)，当前接口路径也不与 Jev API 直接兼容。
+想在本机运行 Jev 一类的结构化决策模型？本项目部署开源的 [Laya](https://pypi.org/project/laya/)，提供本地常驻的 System One HTTP API。
 
 **无需担心 Jev Token 用量：**Laya 在本地设备上推理，不调用 Jev API，因此不会消耗 Jev 的 Token 额度或产生 Jev 的按量调用费用。调用本项目的 HTTP API 仍需自行设置 `LAYA_API_KEY`；单次输入仍受模型上下文限制。
 

@@ -1,6 +1,8 @@
-# systemone — 本地常驻的 SystemOne API 与小游戏
+# Jev 本地替代：Laya API
 
-基于 [Laya](https://pypi.org/project/laya/) 的本地推理服务。启动时从 `models/` 预加载英语、多语和 typed-decisions 三个模型；加载完成后通过 HTTP API 复用。`frontend/` 还提供俄罗斯方块和贪吃蛇示例，逐步展示模型的决策。
+想在本机运行 Jev 一类的结构化决策模型？本项目部署开源的 [Laya](https://pypi.org/project/laya/)，提供本地常驻的 System One HTTP API。它不是 [TypeSafe 的 Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)，当前接口路径也不与 Jev API 直接兼容。
+
+启动时从 `models/` 预加载英语、多语和 typed-decisions 三个模型；加载完成后通过 HTTP API 复用。`frontend/` 还提供俄罗斯方块和贪吃蛇示例，逐步展示模型的决策。
 
 演示：[俄罗斯方块](tetris.gif) · [贪吃蛇](snake.gif)。动图文件较大，此处提供链接以便按需查看。
 
@@ -12,8 +14,8 @@
 
 ```bash
 git lfs install
-git clone https://github.com/OWNER/REPO.git
-cd REPO
+git clone https://github.com/tangwut/jev-alternative.git
+cd jev-alternative
 git lfs pull
 python -m venv .venv
 source .venv/bin/activate

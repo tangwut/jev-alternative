@@ -24,7 +24,7 @@ python scripts/setup_local.py
 python main.py
 ```
 
-准备工具只下载固定版本的 multilingual 模型，校验权重并生成权限受限的 `.env` 与随机密钥。不会覆盖已有 `.env`。已有模型可以使用 `python scripts/setup_local.py --model-root models`，但 LFS 指针不算完整权重。
+准备工具只下载固定版本的 multilingual 模型，校验权重并生成 `.env` 与随机密钥。POSIX 系统设置为仅所有者可读写；Windows 使用目录继承的 ACL。不会覆盖已有 `.env`。已有模型可以使用 `python scripts/setup_local.py --model-root models`，但 LFS 指针不算完整权重。
 
 Windows 的克隆与虚拟环境命令见 [平台说明](docs/operations.md#platforms)。服务打印 Models ready 后，在另一终端激活同一个虚拟环境：
 
@@ -115,9 +115,9 @@ python -c 'import secrets; print(secrets.token_urlsafe(32))'
 本地 Python 客户端读取 `.env` 中的 API Key：
 
 ```bash
-python example_client.py
-python example_client.py "Please refund the duplicate charge."
-python example_client.py --url http://服务器内网IP:8000
+python example_client.py --model multilingual
+python example_client.py "Please refund the duplicate charge." --model multilingual
+python example_client.py --url http://服务器内网IP:8000 --model multilingual
 ```
 
 其他调用方也可以用 curl，把 `YOUR_API_KEY` 替换为自己的密钥：
@@ -139,10 +139,10 @@ curl http://服务器内网IP:8000/api/v1/systemone \
 
 ```bash
 docker build --platform linux/arm64 -t systemone:local .
-docker run --rm --name systemone --env-file .env -p 8001:8000 systemone:local
+docker run --rm --name systemone --env-file .env -e LAYA_MODEL_ROOT=/app/models -e LAYA_HOST=0.0.0.0 -e LAYA_PORT=8000 -p 8001:8000 systemone:local
 ```
 
-本机 8000 端口已有非容器服务时，使用上面的 8001 映射。等待三个模型预加载完成后，访问 `http://127.0.0.1:8001/health`；成功时返回 `status: ready`。调用 API 时，使用 `.env` 中的 `LAYA_API_KEY` 作为 Bearer token。首次启动需要加载约 2.2 GB 模型文件，容器应分配足够内存。
+本机 8000 端口已有非容器服务时，使用上面的 8001 映射。命令显式覆盖模型根目录、监听地址和端口，避免本机 cache 路径与仅监听本机的设置进入容器；实际预加载列表由 `LAYA_MODELS` 决定。等待模型加载完成后，访问 `http://127.0.0.1:8001/health`；成功时返回 `status: ready`。调用 API 时，使用 `.env` 中的 `LAYA_API_KEY` 作为 Bearer token。完整三模型约 2.2 GB，容器应分配足够内存。
 
 ## 验证
 

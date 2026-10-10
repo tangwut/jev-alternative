@@ -29,7 +29,7 @@ Use a second PowerShell window to call `.\.venv\Scripts\python.exe example_clien
 - `--device cpu|cuda|mps`: choose the requested device.
 - `--model-root PATH`: use an existing **snapshot root** or the complete project `models/` directory, without downloading.
 
-The tool validates required files and the selected weight's pinned SHA-256 before creating `.env`. It creates a random Bearer key without printing it. Existing `.env` files are preserved. To prepare a different model, keep a backup of your configuration and move `.env` aside, or configure a separately downloaded checkpoint manually. Do not share the backup or commit it.
+The tool validates required files and the selected weight's pinned SHA-256 before creating `.env`. It creates a random Bearer key without printing it. POSIX permissions are set to owner read/write only; Windows uses the directory's inherited ACLs. Existing `.env` files are preserved. To prepare a different model, keep a backup of your configuration and move `.env` aside, or configure a separately downloaded checkpoint manually. Do not share the backup or commit it.
 
 ## Manual configuration and multiple models
 
@@ -74,10 +74,10 @@ The existing Dockerfile bundles all models. Run `git lfs pull` before building; 
 
 ```bash
 docker build --platform linux/arm64 -t systemone:local .
-docker run --rm --name systemone --env-file .env -e LAYA_MODEL_ROOT=/app/models -p 8001:8000 systemone:local
+docker run --rm --name systemone --env-file .env -e LAYA_MODEL_ROOT=/app/models -e LAYA_HOST=0.0.0.0 -e LAYA_PORT=8000 -p 8001:8000 systemone:local
 ```
 
-The explicit model root overrides a host cache path in `.env`. Wait for preloading, then check `http://127.0.0.1:8001/health`. Allocate enough RAM for the selected model set. Authenticate API calls with the same Bearer key.
+The explicit overrides replace the host cache path and local-only listener in `.env`, and keep the container port aligned with the mapping. Wait for preloading, then check `http://127.0.0.1:8001/health`. Allocate enough RAM for the selected model set. Authenticate API calls with the same Bearer key.
 
 ## Troubleshooting
 

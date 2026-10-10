@@ -53,7 +53,11 @@ def prepare(project_root: Path, *, model="multilingual", device="cpu", model_roo
     descriptor = os.open(config, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(descriptor, "w", encoding="utf-8") as output:
         output.write("# Generated local configuration. Do not commit this file.\n")
-        output.writelines(f"{key}={json.dumps(value, ensure_ascii=False)}\n" for key, value in values.items())
+        for key, value in values.items():
+            # Quote only the host path for dotenv escaping. The container recipe
+            # overrides that path; Docker must see literal, unquoted settings/key.
+            encoded = json.dumps(value, ensure_ascii=False) if key == "LAYA_MODEL_ROOT" else value
+            output.write(f"{key}={encoded}\n")
     return config
 
 

@@ -38,6 +38,19 @@ def test_existing_checkpoint_creates_private_single_model_configuration(tmp_path
     assert config.stat().st_mode & 0o077 == 0
 
 
+def test_generated_configuration_can_be_used_as_a_docker_env_file(tmp_path):
+    module = load_setup()
+    root = tmp_path / "model cache"
+    checkpoint(module, root)
+    config = module.prepare(tmp_path, model_root=root)
+    dotenv = dotenv_values(config)
+    # Docker's --env-file preserves quotes literally. The documented container
+    # command overrides the host-only model root, but uses all other values.
+    docker = dict(line.split("=", 1) for line in config.read_text().splitlines() if line and not line.startswith("#"))
+    for key in ("LAYA_MODELS", "LAYA_DEVICE", "LAYA_HOST", "LAYA_PORT", "LAYA_API_KEY"):
+        assert docker[key] == dotenv[key], f"Docker and dotenv disagree on {key}"
+
+
 def test_existing_configuration_is_preserved_before_download(tmp_path, monkeypatch):
     module = load_setup()
     config = tmp_path / ".env"

@@ -6,7 +6,7 @@ Release notes prepared for review. Publish only after the onboarding change is i
 
 - Authenticated, resident Laya HTTP API for choice, score, and proposition questions.
 - English README and Chinese documentation, with separate quick-start and operations guidance.
-- Single-model setup: pinned Hugging Face download, SHA-256 verification, private generated key, and preservation of existing configuration.
+- Single-model setup: pinned Hugging Face download, SHA-256 verification, a generated local key, POSIX owner-only permissions, and preservation of existing configuration.
 - Support-ticket routing and Agent tool-selection client scenarios.
 - Offline replay of two real local model responses, with recording metadata and disclosed path redaction.
 - A short Tetris preview under 0.5 MB, alongside the original recordings and live Tetris/Snake demos.

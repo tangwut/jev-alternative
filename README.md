@@ -29,7 +29,7 @@ python scripts/setup_local.py
 python main.py
 ```
 
-The setup tool downloads the pinned **multilingual** checkpoint, verifies its SHA-256, and creates a private `.env` with a random API key. It refuses to overwrite existing configuration. If you already have complete weights, use `python scripts/setup_local.py --model-root models` instead. Git LFS pointers are not weights.
+The setup tool downloads the pinned **multilingual** checkpoint, verifies its SHA-256, and creates a local `.env` with a random API key. POSIX permissions are owner read/write only; Windows uses inherited directory ACLs. It refuses to overwrite existing configuration. If you already have complete weights, use `python scripts/setup_local.py --model-root models` instead. Git LFS pointers are not weights.
 
 For Windows commands, other models, device settings, Docker, and troubleshooting, see [operations](docs/operations.md). The games use the **English** model; choose `--model english` during setup if you want live game inference.
 

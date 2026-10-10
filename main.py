@@ -203,7 +203,7 @@ def create_app(settings: Settings | None = None, router_factory=make_router):
     def models():
         return {"loaded": app.state.router.loaded, "device_requested": app.state.settings.device}
 
-    @apiv1_router.post("/systemone", include_in_schema=False)
+    @apiv1_router.post("/systemone", summary="Classify, score, or evaluate a state")
     def predict(body: PredictRequest):
         router = app.state.router
         questions = {key: value.model_dump(exclude_none=True) for key, value in body.questions.items()}

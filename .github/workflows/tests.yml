@@ -24,4 +24,4 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
-      - run: node --test frontend/tetris/tests/core.test.mjs frontend/snake/tests/core.test.mjs
+      - run: node --test frontend/tetris/tests/core.test.mjs frontend/snake/tests/core.test.mjs frontend/replay/tests/replay.test.mjs

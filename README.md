@@ -1,128 +1,102 @@
-# Jev 本地替代：Laya API
+# jev-alternative · Local Laya decision API
 
-想在本机运行 Jev 一类的结构化决策模型？本项目部署开源的 [Laya](https://pypi.org/project/laya/)，提供本地常驻的 System One HTTP API。
+English | [简体中文](README.zh-CN.md)
 
-**无需担心 Jev Token 用量：**Laya 在本地设备上推理，不调用 Jev API，因此不会消耗 Jev 的 Token 额度或产生 Jev 的按量调用费用。调用本项目的 HTTP API 仍需自行设置 `LAYA_API_KEY`；单次输入仍受模型上下文限制。
+Run Laya on your own machine through an authenticated HTTP API for **classification, scoring, and decision tasks**.
 
-启动时从 `models/` 预加载英语、多语和 typed-decisions 三个模型；加载完成后通过 HTTP API 复用。`frontend/` 还提供俄罗斯方块和贪吃蛇示例，逐步展示模型的决策。
+- **Support routing:** classify a ticket and estimate whether a refund is requested.
+- **Agent routing:** select a tool from explicit candidates.
+- **Game decisions:** inspect candidate moves and model choices in Tetris and Snake.
 
-演示：[俄罗斯方块](tetris.gif) · [贪吃蛇](snake.gif)。动图文件较大，此处提供链接以便按需查看。
+Built on the upstream [Laya models](https://huggingface.co/convaiinnovations/laya). This project adds local deployment, authentication, input validation, and integration examples; model training and capabilities belong to upstream. It does not call Jev or consume Jev tokens. Compatibility with Jev clients has not been verified.
 
-模型来自 [Convai Innovations 的 Laya 仓库](https://huggingface.co/convaiinnovations/laya)，按 Apache-2.0 许可证发布。本仓库用 Git LFS 保存约 2.2 GB 的模型权重；克隆前请安装 Git LFS。项目代码使用 [MIT 许可证](LICENSE)，模型文件使用随模型提供的 [Apache-2.0 许可证](models/LICENSE)，来源和校验值见 [模型来源清单](MODEL_PROVENANCE.md)。
+![Tetris candidate moves and model decisions](docs/assets/tetris-preview.gif)
 
-## 启动
+**See it before installing:** download the repository and open [frontend/replay/index.html](frontend/replay/index.html) in a browser. This lightweight replay contains recorded model responses; it makes no API calls and performs no live inference. Full recordings: [Tetris](tetris.gif) · [Snake](snake.gif).
 
-需要 Python 3.12、Git LFS 和足够容纳三个模型的内存。克隆仓库后确认 LFS 权重已拉取，再复制配置并生成自己的 API Key：
+## Quick start: one model
+
+Requires **Python 3.12**. The first installation needs internet access, space for PyTorch and model weights, and available RAM. Download and startup times depend on your machine and network. Inference runs locally after preparation.
 
 ```bash
-git lfs install
-git clone https://github.com/tangwut/jev-alternative.git
+# Skip bundled Git LFS weights; setup downloads just the selected model.
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/tangwut/jev-alternative.git
 cd jev-alternative
-git lfs pull
-python -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-cp .env.example .env
-python -c 'import secrets; print(secrets.token_urlsafe(32))'
+python scripts/setup_local.py
+python main.py
 ```
 
-将生成的值填入 `.env` 的 `LAYA_API_KEY`，然后运行 `python main.py`。Windows 使用 `.venv\Scripts\activate` 和 `copy .env.example .env`。`.env` 不应提交到仓库。进程实际环境变量优先于 `.env`。
+The setup tool downloads the pinned **multilingual** checkpoint, verifies its SHA-256, and creates a local `.env` with a random API key. POSIX permissions are owner read/write only; Windows uses inherited directory ACLs. It refuses to overwrite existing configuration. If you already have complete weights, use `python scripts/setup_local.py --model-root models` instead. Git LFS pointers are not weights.
 
-| 配置 | 含义 |
-| --- | --- |
-| `LAYA_MODEL_ROOT` | 模型目录，默认 `models/`；相对路径以项目目录为基准，也可指定 Hugging Face cache 根目录 |
-| `LAYA_MODELS` | 启动加载列表，默认 `english,multilingual,typed-decisions` |
-| `LAYA_DEVICE` | 当前配置 `cpu`；可根据设备改为 `cuda` / `mps` |
-| `LAYA_HOST` / `LAYA_PORT` | 默认 `127.0.0.1:8000`；需要局域网访问时自行调整监听地址 |
-| `LAYA_API_KEY` | 必填，Bearer 认证密钥；缺失时启动失败 |
+For Windows commands, other models, device settings, Docker, and troubleshooting, see [operations](docs/operations.md). The games use the **English** model; choose `--model english` during setup if you want live game inference.
 
-缓存根目录通过 `refs/main` 定位到 `snapshots/<revision>`。也可以将 `LAYA_MODEL_ROOT` 指向固定快照，实现版本固定。英语使用根目录，其他模型使用 `multilingual/` 和 `typed-decisions/` 子目录。缺少配置、权重、tokenizer 或 encoder 文件会启动失败，不会改为在线下载。完整快照中的 tokenizer 配置可能被 Laya 做兼容性修正，启动时须有写权限。
+Wait for `Models ready`, then activate the same virtual environment in another terminal:
 
-三个模型会占用数 GB 内存，首次启动需要等待。CPU 不是 README 宣传的 T4 32.8 ms 场景，应以本机实际调用为准。Laya 可能因设备不可用或显存问题回退到 CPU，注意启动日志。
+```bash
+python example_client.py --scenario support --model multilingual
+python example_client.py --scenario agent --model multilingual
+```
 
-**保持一个 worker，不要使用 `--reload`。** 多 worker 会各自加载一套模型。服务同时执行一条推理请求，其他同时到达的推理请求返回 503 和 `Retry-After: 1`，调用方可带随机退避重试。当前没有跨请求动态组批。
+`GET http://127.0.0.1:8000/health` returns `{"status":"ready","models":["multilingual"]}` once the service is ready. Open `http://127.0.0.1:8000/docs`, select **Authorize**, and enter your `.env` API key to explore the inference endpoint.
 
-## API
+## What a decision looks like
 
-| 方法与路径 | 认证 | 用途 |
-| --- | --- | --- |
-| `GET /health` | 无 | 模型就绪状态；未就绪返回 503 |
-| `GET /api/v1/models` | `Authorization: Bearer <token>` | 常驻模型列表及请求设备 |
-| `POST /api/v1/systemone` | `Authorization: Bearer <token>` | 推理 |
-| `GET /docs` | 无 | Swagger UI；v1 路由按组展示，推理接口不在文档中 |
-
-输入例子：
+Send a state and questions with explicit outcomes:
 
 ```json
 {
   "state": {"message": "我被重复扣款了，请退款。"},
-  "lang": "zh",
+  "model": "multilingual",
   "questions": {
     "department": {
       "type": "choice",
       "instructions": "Which department should handle this request?",
-      "criteria": {"billing": "payments and refunds", "technical": "bugs and outages"}
-    },
-    "refund_requested": {
-      "type": "noul",
-      "instructions": "Does the customer request a refund?"
+      "criteria": {
+        "billing": "payments, duplicate charges and refunds",
+        "technical": "software bugs and outages",
+        "general": "other inquiries"
+      }
     }
   }
 }
 ```
 
-`state` 接受字符串、对象或列表。`questions` 为 1–20 个问题，每个必须提供 type 和 instructions：
+The API preserves Laya's `answers`, `usage`, and `routing` output. See [business examples and recorded responses](docs/examples.md) for complete requests and actual outputs.
 
-- `choice`：criteria 为不重复的字符串列表，或标签到描述的对象，1–20 项。
-- `score`：criteria 为有顺序的等级列表，1–20 项，结果是索引期望值。
-- `noul`：criteria 可省略，或提供 true/false 描述对象；返回值是命题为真的概率。
+| Question type | Use | Interpretation |
+| --- | --- | --- |
+| `choice` | Select a department or tool | Choice among supplied candidates |
+| `score` | Evaluate urgency on ordered levels | Expected index of the supplied levels |
+| `noul` | Evaluate “refund requested?” | Probability of the proposition, not a boolean |
 
-单个请求体上限 64 KiB（包括 chunked 请求），超出返回 413。未知字段和无效问题返回 422；密钥错误返回 401；模型繁忙/未就绪返回 503；推理内部故障返回不包含内部细节的 500。
+Choice/score confidence is an entropy score, not a universal probability of correctness. The agent example recommends a tool; it does not execute tools or issue refunds. Game demos first filter candidates with local rules, then ask the model to choose.
 
-可选 `model` 为 `english`、`multilingual`、`typed-decisions`；它优先于 `lang`。省略 model 时按语言自动选择英语或多语模型。typed-decisions 需显式指定。路由选中未配置的模型会返回 422，不会在请求中懒加载。比如只预加载 multilingual 时，调用方应明确传 `model: "multilingual"`。
+## Scope and limits
 
-输出保留 Laya 的 `answers`、`usage`、`routing` 格式。`noul` 不是布尔值；choice/score 的 confidence 是熵分数，不能当作统一的答对概率。长输入仍受模型 token 预算截断，64 KiB 限制不代表模型能读取这么长的上下文。
+- One process and one active inference request; concurrent inference returns **503** with `Retry-After: 1`.
+- Requests are limited to **64 KiB**, 1–20 questions, and up to 20 choice/score criteria. Model context limits can still truncate long inputs.
+- Explicitly select a preloaded model. Unconfigured models return **422** and are never loaded on demand.
+- CPU is the default. CUDA/MPS require compatible hardware and dependencies; check logs for fallback.
+- No published cross-platform latency or accuracy benchmark yet. Unit tests do not establish prediction quality.
+- Local server defaults to `127.0.0.1`. See [deployment guidance](docs/operations.md#deployment) before exposing it beyond your machine.
 
-## 调用
+## Contribute
 
-本地 Python 客户端读取 `.env` 中的 API Key：
-
-```bash
-python example_client.py
-python example_client.py "Please refund the duplicate charge."
-python example_client.py --url http://服务器内网IP:8000
-```
-
-其他调用方也可以用 curl，把 `YOUR_API_KEY` 替换为自己的密钥：
-
-```bash
-curl http://服务器内网IP:8000/api/v1/systemone \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"state":"请退款","model":"multilingual","questions":{"refund":{"type":"noul","instructions":"Does the customer request a refund?"}}}'
-```
-
-局域网访问使用服务器 IP，不能使用 `0.0.0.0` 或调用方自己的 `127.0.0.1`。公网部署使用 HTTPS 反向代理（代理在同一机器时可让后端监听 127.0.0.1），并配置防火墙、限流和请求读取超时。此项目不会自动创建公网入口或系统开机服务。
-
-停止前台服务按 Ctrl+C。停止后释放 Router 引用；下一次启动重新加载。需要长期守护时，可由 systemd / launchd / 容器管理进程。
-
-## Docker（本机 arm64 CPU）
-
-构建前必须运行 `git lfs pull`，确保 `models/` 中是实际权重而非 LFS 指针；镜像内模型路径为 `/app/models`。Dockerfile 当前针对本地 arm64 CPU 场景。
-
-```bash
-docker build --platform linux/arm64 -t systemone:local .
-docker run --rm --name systemone --env-file .env -p 8001:8000 systemone:local
-```
-
-本机 8000 端口已有非容器服务时，使用上面的 8001 映射。等待三个模型预加载完成后，访问 `http://127.0.0.1:8001/health`；成功时返回 `status: ready`。调用 API 时，使用 `.env` 中的 `LAYA_API_KEY` 作为 Bearer token。首次启动需要加载约 2.2 GB 模型文件，容器应分配足够内存。
-
-## 验证
+API tests do **not** require model downloads:
 
 ```bash
 python -m pip install -r requirements-ci.txt
 python -m pytest -q
-node --test frontend/tetris/tests/core.test.mjs frontend/snake/tests/core.test.mjs
+node --test frontend/tetris/tests/core.test.mjs frontend/snake/tests/core.test.mjs frontend/replay/tests/replay.test.mjs
 ```
 
-API 测试只替换模型计算边界，真实执行 HTTP、鉴权、参数校验、生命周期和并发控制。真实模型启动和请求另行验证；单元测试通过不代表模型预测准确率。小游戏使用方法见 [frontend/README.md](frontend/README.md)。贡献和安全报告方式分别见 [CONTRIBUTING.md](CONTRIBUTING.md) 与 [SECURITY.md](SECURITY.md)。
+Read [CONTRIBUTING.md](CONTRIBUTING.md), report reproducible issues, or propose a small improvement with validation. [Roadmap](docs/roadmap.md) lists concrete areas where feedback and contributions help. [Security reports](SECURITY.md) should never include your key or `.env`.
+
+If this project helps you, a star makes it easier to find again. Subscribe to releases if you want update notifications; fork when you want to change or contribute code.
+
+## License and attribution
+
+Project code: [MIT](LICENSE). Bundled/downloaded Laya models: [Apache-2.0](models/LICENSE), from Convai Innovations. [MODEL_PROVENANCE.md](MODEL_PROVENANCE.md) records the pinned revision and weight hashes. Neither this repository nor its license replaces the upstream model license.

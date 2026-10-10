@@ -11,3 +11,5 @@
 | `models/typed-decisions/model.safetensors` | `4fa56de72383a9d3efa9cfa78955733c81b9fc8067a587ca4beb82c78107a24e` |
 
 权重使用 Git LFS 保存。克隆者需先安装 Git LFS，再执行 `git lfs pull`；否则 Git 工作区中可能只有文本指针，API 不能加载模型。发布新模型版本时，请更新上游版本、校验值和许可证核对结果。
+
+单模型快速启动可跳过 LFS 权重，由 `scripts/setup_local.py` 从同一固定版本下载所选模型到 Hugging Face cache，并在生成 `.env` 前校验上述 SHA-256。推理进程仍只读取本地文件。这个流程保留上游模型许可证，不改变模型的分发或使用条款。

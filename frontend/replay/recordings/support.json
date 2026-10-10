@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "recorded_on": "2026-10-10",
+    "model_revision": "aa8c91ca088ec597df95a0d1c76b3063cb2ae5e8",
+    "device": "cpu",
+    "platform": "Darwin arm64",
+    "python": "3.14.6",
+    "laya": "0.3.6",
+    "startup_seconds": 37.23,
+    "notice": "Recorded HTTP responses from real local inference. Replay does not run a model. Individual timings are not a benchmark.",
+    "redactions": [
+      "routing.repo: local filesystem path replaced with [local snapshot]/multilingual"
+    ]
+  },
+  "id": "support",
+  "request": {
+    "state": {
+      "message": "我被重复扣款了，请退款。"
+    },
+    "questions": {
+      "department": {
+        "type": "choice",
+        "instructions": "Which department should handle this request?",
+        "criteria": {
+          "billing": "payments, duplicate charges and refunds",
+          "technical": "software bugs and outages",
+          "general": "other inquiries"
+        }
+      },
+      "refund_requested": {
+        "type": "noul",
+        "instructions": "Does the customer request a refund?"
+      }
+    },
+    "model": "multilingual"
+  },
+  "response": {
+    "model": "laya-rl-agent",
+    "answers": {
+      "department": {
+        "type": "choice",
+        "choice": "billing",
+        "probabilities": {
+          "billing": 0.9982,
+          "technical": 0.0003,
+          "general": 0.0015
+        },
+        "confidence": 0.9869,
+        "action": {
+          "act_probability": 1.0
+        }
+      },
+      "refund_requested": {
+        "type": "noul",
+        "noul": 0.9941,
+        "confidence": 0.9941,
+        "action": {
+          "act_probability": 1.0
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 98,
+      "output_tokens": 0
+    },
+    "routing": {
+      "model": "multilingual",
+      "repo": "[local snapshot]/multilingual",
+      "reason": "explicit model='multilingual'",
+      "detection": null,
+      "workflow": null
+    }
+  },
+  "elapsed_ms": 62.68
+}

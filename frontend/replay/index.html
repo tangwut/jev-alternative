@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local decisions · Laya replay</title>
+  <style>
+    :root{color-scheme:light;--ink:#17372f;--muted:#62726c;--paper:#f5f4ed;--line:#d8ded3;--green:#237358}
+    *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 system-ui,-apple-system,sans-serif}
+    main{max-width:1120px;margin:auto;padding:36px 28px 56px} a{color:var(--green)}
+    nav{display:flex;justify-content:space-between;gap:20px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:20px}
+    .brand{font-weight:750;letter-spacing:-.4px}.tag{font:12px ui-monospace,monospace;letter-spacing:1px;text-transform:uppercase;background:#e2eadc;border-radius:20px;padding:7px 12px}
+    header{max-width:790px;padding:44px 0 28px}.eyebrow{font:12px ui-monospace,monospace;color:var(--green);letter-spacing:2px;text-transform:uppercase}
+    h1{font-size:clamp(36px,5vw,60px);line-height:1.08;letter-spacing:-2.6px;margin:15px 0 20px;font-weight:650}
+    .intro{max-width:700px;color:var(--muted);font-size:18px} .notice{border-left:3px solid var(--green);padding:8px 16px;color:var(--muted);font-size:14px}
+    .controls{display:flex;align-items:end;gap:16px;flex-wrap:wrap;margin:28px 0 24px} label{display:block;font-size:13px;margin-bottom:6px;color:var(--muted)}
+    select,button{font:inherit;border-radius:8px;padding:12px 16px;min-height:48px}select{border:1px solid var(--line);background:#fff;color:var(--ink);min-width:260px}
+    button{background:var(--ink);color:white;border:1px solid var(--ink);cursor:pointer}button:disabled{opacity:.6;cursor:wait}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #d19b40;outline-offset:3px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;min-width:0}
+    .card h2{font-size:17px;margin:0 0 16px}.state{font-size:20px;line-height:1.5;margin:0 0 24px;min-height:62px}.caption{font:12px ui-monospace,monospace;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+    .option{border:1px solid var(--line);border-radius:9px;margin:10px 0;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .option.selected{background:#edf4e8;border-color:var(--green)}.option small{color:var(--muted);display:block;font-size:12px}.percent{font:14px ui-monospace,monospace;white-space:nowrap}
+    .steps{display:flex;gap:8px;margin:18px 0 28px}.step{flex:1;border-top:3px solid var(--line);padding-top:10px;font-size:12px;color:var(--muted)}.step.active{border-color:var(--green);color:var(--ink)}
+    .decision{font-size:clamp(24px,3vw,38px);letter-spacing:-1px;overflow-wrap:anywhere;margin:14px 0}.detail{font-size:14px;color:var(--muted);min-height:48px}
+    .stat{border-top:1px solid var(--line);padding-top:20px;margin-top:24px;font-size:13px;color:var(--muted)}
+    details{margin-top:20px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:16px 20px}summary{cursor:pointer;font-weight:600}pre{font:12px/1.6 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow:auto;background:#f7f8f4;padding:16px;border-radius:8px}
+    footer{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:30px;padding-top:22px;font-size:13px;color:var(--muted)}
+    @media(max-width:720px){main{padding:22px 18px 32px}.grid{grid-template-columns:1fr}header{padding-top:30px}h1{letter-spacing:-1.5px}.card{padding:20px}.controls>div,select,button{width:100%}.state{min-height:0}}
+  </style>
+</head>
+<body>
+<main>
+  <nav><span class="brand">jev-alternative / Laya</span><span class="tag">Recorded replay</span></nav>
+  <header>
+    <div class="eyebrow">Local models. Explicit outcomes.</div>
+    <h1>A state goes in.<br>A decision comes out.</h1>
+    <p class="intro">See how a local Laya model routes a support ticket or selects an agent tool. Inspect the candidates, the choice, and the original API response.</p>
+    <p class="notice">These are recorded responses from real local inference. This page runs offline with no model, API key, or backend. Replay timing is an animation; it does not measure inference speed.</p>
+  </header>
+  <div class="controls">
+    <div><label for="scenario">Choose a scenario</label><select id="scenario"><option value="support">Support ticket routing / 工单分流</option><option value="agent">Agent tool selection / 工具选择</option></select></div>
+    <button id="replay" type="button">Replay recorded decision →</button>
+  </div>
+  <div class="grid">
+    <section class="card"><h2>01 / State &amp; candidates</h2><p class="state" id="state"></p><div class="caption">Allowed outcomes</div><div id="candidates"></div></section>
+    <section class="card"><h2>02 / Recorded result</h2><div class="steps"><div class="step" id="step1">1. Read state</div><div class="step" id="step2">2. Compare options</div><div class="step" id="step3">3. Show choice</div></div><div class="caption">Selected outcome</div><div id="decision" class="decision" aria-live="polite">Ready to replay</div><p id="detail" class="detail"></p><div id="metadata" class="stat"></div></section>
+  </div>
+  <details><summary>Inspect the request &amp; response</summary><h3>POST /api/v1/systemone</h3><pre id="request"></pre><h3>Recorded HTTP 200 response</h3><pre id="response"></pre></details>
+  <footer><span>Tool selection is a recommendation; no tool or refund is executed.</span><a href="../../README.md">Run it yourself · README</a><a href="https://github.com/tangwut/jev-alternative">Source on GitHub ↗</a></footer>
+</main>
+<script src="recordings.js"></script>
+<script src="replay.js"></script>
+</body>
+</html>

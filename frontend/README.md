@@ -1,5 +1,13 @@
 # SystemOne 小游戏
 
+## 免安装业务回放
+
+直接双击 `replay/index.html`，选择工单分流或 Agent 工具选择，再点击 Replay。页面内置真实模型的请求与响应记录，无需 Python、模型、API Key 或后端；不发送网络请求，不执行实时推理。记录版本和设备信息在页面中展示，录制的单次耗时不构成性能基准。
+
+## 实时游戏
+
+游戏固定使用 `english` 模型。单模型快速启动默认是 `multilingual`，不能直接用于这些游戏。首次准备时使用 `python scripts/setup_local.py --model english`；已有 `.env` 的用户请先妥善保存并移开配置，再准备 English，或手动配置已下载的 English 模型。
+
 目录：
 
 - `tetris/`：俄罗斯方块；SystemOne 每个方块选择一次落点。
@@ -19,6 +27,6 @@ python main.py
 测试：
 
 ```bash
-node --test frontend/tetris/tests/core.test.mjs frontend/snake/tests/core.test.mjs
+node --test frontend/tetris/tests/core.test.mjs frontend/snake/tests/core.test.mjs frontend/replay/tests/replay.test.mjs
 python -m pytest -q
 ```

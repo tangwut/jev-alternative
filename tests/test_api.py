@@ -125,7 +125,10 @@ def test_v1_routes_share_prefix_and_openapi_group(monkeypatch, tmp_path):
     app = module.create_app(module.Settings(tmp_path, "test-secret"), FakeRouter)
     spec = app.openapi()
     assert spec["paths"]["/api/v1/models"]["get"]["tags"] == ["/api/v1"]
-    assert "/api/v1/systemone" not in spec["paths"]
+    inference = spec["paths"]["/api/v1/systemone"]["post"]
+    assert inference["tags"] == ["/api/v1"]
+    assert inference["security"] == [{"HTTPBearer": []}]
+    assert "requestBody" in inference
     with TestClient(app) as client:
         assert client.post("/api/v1/systemone", json=BODY, headers=HEADERS).status_code == 200
 

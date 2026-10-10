@@ -1,0 +1,31 @@
+name: Bug report
+description: Report a reproducible API, setup, or demo problem
+body:
+  - type: markdown
+    attributes:
+      value: Do not include API keys, .env contents, private input data, or model weights.
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python/Node version, model, requested device, and project commit
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal commands or request, with secrets removed
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      description: Remove credentials and private filesystem paths
